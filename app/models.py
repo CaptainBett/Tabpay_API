@@ -76,7 +76,7 @@ class Block(Base):
     
     # Relationships
     umbrella = relationship("Umbrella", back_populates="blocks")
-    zones = relationship("Zone", back_populates="block")
+    zones = relationship("Zone", back_populates="parent_block")
     meetings = relationship("Meeting", back_populates="block")
     roles = relationship("BlockRole", back_populates="block")
 
@@ -95,7 +95,7 @@ class Zone(Base):
     parent_block_id = Column(Integer, ForeignKey("blocks.id"))
     
     # Relationships
-    block = relationship("Block", back_populates="zones")
+    parent_block = relationship("Block", back_populates="zones")
     members = relationship("MemberBlockAssociation", back_populates="zone")
 
 # -------------------

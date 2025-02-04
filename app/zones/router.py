@@ -34,13 +34,17 @@ async def create_zone(
     await db.commit()
     await db.refresh(new_zone)
     
-    # Re-query the zone with eager loading (adjust relationships as needed)
+    # Re-query the zone with eager loading of both members and parent_block
     result = await db.execute(
         select(Zone)
-        .options(selectinload(Zone.members))  
+        .options(
+            selectinload(Zone.members),
+            selectinload(Zone.parent_block)
+        )
         .where(Zone.id == new_zone.id)
     )
     zone_with_members = result.scalar_one_or_none()
     return zone_with_members
+
 
 #TODO Add try except blocks
