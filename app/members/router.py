@@ -48,8 +48,20 @@ async def create_member(
     )
     
     db.add(new_member)
-    db.add(association)
+    await db.flush()  # Get the member ID before creating association
+
+    # Now create association with the member ID
+    association = MemberBlockAssociation(
+        member_id=new_member.id,  # Use the flushed ID
+        phone_number=member.phone_number,
+        id_number=member.id_number,
+        acc_number=member.acc_number,
+        block_id=block.id,
+        zone_id=zone_id
+    )
     
+    db.add(association)
+
     try:
         await db.commit()
     except IntegrityError:
@@ -58,16 +70,16 @@ async def create_member(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Duplicate member details in block"
         )
-    
-    await db.refresh(new_member)
-    
-    # Re-query the member with eager loading for block_associations.
+
+    # Eager load relationships
     result = await db.execute(
         select(Member)
         .options(selectinload(Member.block_associations))
         .where(Member.id == new_member.id)
     )
-    member_with_assocs = result.scalar_one_or_none()
-    return member_with_assocs
+    member_with_assocs = result.scalar_one()
+
+    return MemberResponse.from_member_with_association(member_with_assocs)
+
 
 #TODO Add try except blocks
