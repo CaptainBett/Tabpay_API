@@ -4,7 +4,7 @@ from datetime import datetime
 
 class AdminResponse(BaseModel):
     id: int
-    username: str
+    full_name: str
     email: EmailStr
     phone_number: str
     is_approved: bool
@@ -15,7 +15,7 @@ class AdminResponse(BaseModel):
 
 
 class AdminCreate(BaseModel):
-    username: str
+    full_name: str
     email: EmailStr
     phone_number: str
     password: str
@@ -27,4 +27,4 @@ class Token(BaseModel):
 
     
 class TokenData(BaseModel):
-    username: str | None = None
+    email: EmailStr | None = None

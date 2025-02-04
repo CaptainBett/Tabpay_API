@@ -17,13 +17,7 @@ async def register_admin(
     admin: AdminCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    # Check if username or email exists
-    existing_username = await db.execute(
-        select(User).where((User.username == admin.username))
-    )
-    if existing_username.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Username already exists")
-    
+    # Check if email exists    
     existing_email = await db.execute(
         select(User).where((User.email == admin.email))
     )
@@ -47,7 +41,7 @@ async def register_admin(
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(),db: AsyncSession = Depends(get_db)):
     user = await db.execute(
-        select(User).where(User.username == form_data.username)
+        select(User).where(User.email == form_data.username)
     )
     user = user.scalar_one_or_none()
     
@@ -59,7 +53,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(),db: AsyncSessio
         raise HTTPException(status_code=403, detail="Admin account pending approval")
     
     return {
-        "access_token": create_access_token({"sub": user.username}),
+        "access_token": create_access_token({"sub": user.email}),
         "token_type": "bearer"
     }
 

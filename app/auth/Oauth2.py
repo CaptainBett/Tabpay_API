@@ -11,7 +11,7 @@ from .schema import TokenData
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 
@@ -33,14 +33,14 @@ def create_access_token(data: dict):
 async def verify_access_token(token: str, credentials_exception, db: AsyncSession):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
 
-    result = await db.execute(select(User).where(User.username == token_data.username))
+    result = await db.execute(select(User).where(User.email == token_data.email))
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception

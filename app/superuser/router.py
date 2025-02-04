@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends,status
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..models import User,UserRole
@@ -6,7 +6,7 @@ from .schema import SuperuserCreate
 from sqlalchemy import select
 from ..utils import hash_password
 from ..auth.Oauth2 import get_current_superuser
-from ..auth.schema import AdminResponse 
+from .schema import AdminResponse 
 
 
 router = APIRouter(prefix="/superuser", tags=["Superuser"])
@@ -42,25 +42,20 @@ async def create_superuser(
     await db.commit()
     return {"message": "Superuser created successfully"}
 
-@router.get("/approve-admin/", response_model=list[AdminResponse])
-async def get_pending_admins(db: AsyncSession = Depends(get_db), superuser: User = Depends(get_current_superuser)):
-    superuser = await db.execute(
+@router.get("/pending-admins/", response_model=list[AdminResponse])
+async def get_pending_admins(
+    db: AsyncSession = Depends(get_db),
+    superuser: User = Depends(get_current_superuser)
+):
+    result = await db.execute(
         select(User).where(
-            (User.email == superuser.email) |
-            (User.role == UserRole.SUPERUSER)
+            User.role == UserRole.ADMIN,
+            User.is_approved == False
         )
-    )    
-    if superuser:
-        pending_admins = await db.execute(
-            select(User).where(
-                User.role == UserRole.ADMIN,
-                User.is_approved == False
-            )
-        )
-        if pending_admins:      
-            return pending_admins
-    else:
-        raise HTTPException(status_code=404,detail="Superuser does not exist")
+    )
+    pending_admins = result.scalars().all()  
+    return pending_admins
+
 
 @router.post("/approve-admin/{admin_id}/", response_model=AdminResponse)
 async def approve_admin(
