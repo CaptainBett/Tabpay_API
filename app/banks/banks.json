@@ -1,0 +1,147 @@
+{
+    "banks": [
+      {
+        "name": "KCB Bank",
+        "paybill_no": "522522"
+      },
+      {
+        "name": "Commercial Bank of Africa (CBA)",
+        "paybill_no": "880100"
+      },
+      {
+        "name": "Co-operative Bank",
+        "paybill_no": "400200"
+      },
+      {
+        "name": "Standard Chartered Bank",
+        "paybill_no": "329329"
+      },
+      {
+        "name": "Barclays Bank (Now Absa)",
+        "paybill_no": "303030"
+      },
+      {
+        "name": "NIC Bank Limited",
+        "paybill_no": "488488"
+      },
+      {
+        "name": "Family Bank Ltd",
+        "paybill_no": "222111"
+      },
+      {
+        "name": "CFC Stanbic",
+        "paybill_no": "600100"
+      },
+      {
+        "name": "Equity Bank",
+        "paybill_no": "247247"
+      },
+      {
+        "name": "National Bank",
+        "paybill_no": "547700"
+      },
+      {
+        "name": "Chase Bank",
+        "paybill_no": "552800"
+      },
+      {
+        "name": "I&M Bank Limited",
+        "paybill_no": "542542"
+      },
+      {
+        "name": "Diamond Trust Bank (DTB)",
+        "paybill_no": "516600"
+      },
+      {
+        "name": "Ecobank",
+        "paybill_no": "700201"
+      },
+      {
+        "name": "Jamii Bora Bank",
+        "paybill_no": "529901"
+      },
+      {
+        "name": "Imperial Bank Ltd",
+        "paybill_no": "800100"
+      },
+      {
+        "name": "ABC Bank",
+        "paybill_no": "111777"
+      },
+      {
+        "name": "Credit Bank",
+        "paybill_no": "972700"
+      },
+      {
+        "name": "Consolidated Bank Ltd",
+        "paybill_no": "508400"
+      },
+      {
+        "name": "Equatorial Commercial Bank",
+        "paybill_no": "498100"
+      },
+      {
+        "name": "K-Rep Bank",
+        "paybill_no": "111999"
+      },
+      {
+        "name": "Transnational Bank",
+        "paybill_no": "862862"
+      },
+      {
+        "name": "Post Office Savings Bank",
+        "paybill_no": "200999"
+      },
+      {
+        "name": "Gulf African Bank",
+        "paybill_no": "985050"
+      },
+      {
+        "name": "Housing Finance Company Ltd",
+        "paybill_no": "100400"
+      },
+      {
+        "name": "Bank of Africa (BOA)",
+        "paybill_no": "972900"
+      },
+      {
+        "name": "UBA Bank",
+        "paybill_no": "559900"
+      },
+      {
+        "name": "Guardian Bank",
+        "paybill_no": "344501"
+      },
+      {
+        "name": "Prime Bank",
+        "paybill_no": "982800"
+      },
+      {
+        "name": "Guaranty Trust Bank",
+        "paybill_no": "910200"
+      }
+    ],
+    "dtms": [
+      {
+        "name": "KWFT DTM",
+        "paybill_no": "101200"
+      },
+      {
+        "name": "SMEP DTM",
+        "paybill_no": "777001"
+      },
+      {
+        "name": "Musoni",
+        "paybill_no": "514000"
+      },
+      {
+        "name": "Vision Fund Kenya",
+        "paybill_no": "200555"
+      },
+      {
+        "name": "Rafiki DTM",
+        "paybill_no": "802200"
+      }
+    ]
+  }
+  

@@ -12,36 +12,6 @@ from .schema import AdminResponse
 router = APIRouter(prefix="/superuser", tags=["Superuser"])
 
 
-#TODO CREATE THIS SUPERUSER VIA THE COMMANDLINE OR AUTOMATICALLY
-
-@router.post("/create-superuser/")
-async def create_superuser(
-    superuser: SuperuserCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    # In real production, protect this endpoint or use CLI-only creation
-    existing_superuser = await db.execute(
-        select(User).where(
-            (User.email == superuser.email) |
-            (User.role == UserRole.SUPERUSER)
-        )
-    )
-    if existing_superuser.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Superuser already exists")
-
-    hashed_password = hash_password(superuser.password)
-    superuser = User(
-        email=superuser.email,
-        password=hashed_password,
-        role=UserRole.SUPERUSER,
-        is_approved=True,
-        is_active=True
-    )
-    
-    db.add(superuser)
-    await db.commit()
-    return {"message": "Superuser created successfully"}
-
 @router.get("/pending-admins/", response_model=list[AdminResponse])
 async def get_pending_admins(
     db: AsyncSession = Depends(get_db),

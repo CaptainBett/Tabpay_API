@@ -5,7 +5,7 @@ from enum import Enum as PyEnum
 from datetime import datetime
 
 # Base class for all models
-from .database import Base
+from .utils import Base
 
 
 class RoleType(PyEnum):
