@@ -56,7 +56,7 @@ class Umbrella(Base):
     
     # Relationships
     admin = relationship("User", back_populates="umbrella")
-    blocks = relationship("Block", back_populates="umbrella")
+    blocks = relationship("Block", back_populates="parent_umbrella")
 
 # -------------------
 # Organizational Structure
@@ -75,7 +75,7 @@ class Block(Base):
     parent_umbrella_id = Column(Integer, ForeignKey("umbrellas.id"))
     
     # Relationships
-    umbrella = relationship("Umbrella", back_populates="blocks")
+    parent_umbrella = relationship("Umbrella", back_populates="blocks")
     zones = relationship("Zone", back_populates="parent_block")
     meetings = relationship("Meeting", back_populates="block")
     roles = relationship("BlockRole", back_populates="block")
