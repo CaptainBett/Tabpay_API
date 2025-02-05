@@ -48,7 +48,7 @@ async def create_umbrella(
 
 
 
-@router.get("/umbrellas/", response_model=list[UmbrellaResponse])
+@router.get("/", response_model=list[UmbrellaResponse])
 async def get_all_umbrellas(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -78,7 +78,7 @@ async def get_all_umbrellas(
     )
     return [result.scalar_one()]
 
-@router.get("/umbrellas/{umbrella_id}", response_model=UmbrellaResponse)
+@router.get("/{umbrella_id}", response_model=UmbrellaResponse)
 async def get_umbrella_by_id(
     umbrella_id: int,
     db: AsyncSession = Depends(get_db),

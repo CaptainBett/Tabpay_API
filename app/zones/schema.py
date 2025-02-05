@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class BlockResponse(BaseModel):
 
 class MemberResponse(BaseModel):
     id: int
-    email: EmailStr
+    id_number: str
 
     class Config:
         from_attributes = True
@@ -28,5 +28,6 @@ class ZoneResponse(BaseModel):
 
     class Config:
         from_attributes = True
+        fields = {"members": {"alias": "member_list"}}
 
 ZoneResponse.update_forward_refs()

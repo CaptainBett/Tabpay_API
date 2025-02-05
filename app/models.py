@@ -97,6 +97,7 @@ class Zone(Base):
     # Relationships
     parent_block = relationship("Block", back_populates="zones")
     members = relationship("MemberBlockAssociation", back_populates="zone")
+    
 
 # -------------------
 # Member Management
