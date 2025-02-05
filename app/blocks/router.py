@@ -41,3 +41,4 @@ async def create_block(
     return block_with_zones
 
 #TODO Add try except blocks
+

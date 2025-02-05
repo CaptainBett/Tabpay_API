@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from ..database import get_db
-from ..models import User, Umbrella
+from ..models import User, Umbrella, UserRole
 from .schema import UmbrellaCreate, UmbrellaResponse
-from ..auth.Oauth2 import get_current_admin
+from ..auth.Oauth2 import get_current_admin, get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -45,3 +45,66 @@ async def create_umbrella(
     return umbrella_with_blocks
 
 #TODO Add try except blocks
+
+
+
+@router.get("/umbrellas/", response_model=list[UmbrellaResponse])
+async def get_all_umbrellas(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # For superusers, return all umbrellas
+    if current_user.role == UserRole.SUPERUSER:
+        result = await db.execute(
+            select(Umbrella)
+            .options(selectinload(Umbrella.blocks))
+            .order_by(Umbrella.created_at)
+        )
+        return result.scalars().all()
+    
+    # For admins, return their own umbrella
+    umbrella = current_user.umbrella
+    if not umbrella:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No umbrella found for this admin"
+        )
+    
+    # Reload with blocks relationship
+    result = await db.execute(
+        select(Umbrella)
+        .options(selectinload(Umbrella.blocks))
+        .where(Umbrella.id == umbrella.id)
+    )
+    return [result.scalar_one()]
+
+@router.get("/umbrellas/{umbrella_id}", response_model=UmbrellaResponse)
+async def get_umbrella_by_id(
+    umbrella_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Get umbrella with blocks
+    result = await db.execute(
+        select(Umbrella)
+        .options(selectinload(Umbrella.blocks))
+        .where(Umbrella.id == umbrella_id)
+    )
+    umbrella = result.scalar_one_or_none()
+    
+    if not umbrella:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Umbrella not found"
+        )
+    
+    # Authorization check
+    if current_user.role == UserRole.ADMIN:
+        user_umbrella = current_user.umbrella
+        if not user_umbrella or user_umbrella.id != umbrella_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to access this umbrella"
+            )
+    
+    return umbrella

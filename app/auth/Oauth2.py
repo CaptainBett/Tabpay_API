@@ -40,7 +40,12 @@ async def verify_access_token(token: str, credentials_exception, db: AsyncSessio
     except JWTError:
         raise credentials_exception
 
-    result = await db.execute(select(User).where(User.email == token_data.email))
+    # result = await db.execute(select(User).where(User.email == token_data.email))
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.umbrella))
+        .where(User.email == token_data.email)
+    )
     user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
