@@ -8,18 +8,9 @@ from .config import settings
 SQLALCHEMY_DATABASE_URL = settings.db_url
 
 
-engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    connect_args={"check_same_thread": False}, 
-    echo=True
-)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 
-async_session = async_sessionmaker(
-    engine, 
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False
-)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 Base = declarative_base()
 

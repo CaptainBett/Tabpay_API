@@ -4,7 +4,6 @@ from ..models import Member
 
 class MemberBase(BaseModel):
     full_name: str
-    image_file: str | None = None
 
 class MemberCreate(MemberBase):
     phone_number: str

@@ -32,6 +32,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     phone_number = Column(String, unique=True, index=True)
     password = Column(String)
+    image_file = Column(String(50))
     is_active = Column(Boolean, default=False)
     is_approved = Column(Boolean, default=False)
     role = Column(Enum(UserRole))  # SUPERUSER or ADMIN
@@ -110,7 +111,6 @@ class Member(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String, index=True)
-    image_file = Column(String(50))
     registered_at = Column(DateTime, default=datetime.now())
     
     # Relationships

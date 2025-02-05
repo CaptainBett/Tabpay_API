@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from typing import AsyncGenerator
-from .utils import Base, async_session, SQLALCHEMY_DATABASE_URL
+from .utils import Base, async_session, SQLALCHEMY_DATABASE_URL, engine
 from fastapi import FastAPI
 from .banks.utils import import_initial_banks
 from contextlib import asynccontextmanager
@@ -8,21 +8,18 @@ from .superuser.utils import create_initial_superuser
 
 
 
-# Use the aiosqlite driver for async SQLite operations
 SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL
 
 # Create the async engine
-engine = create_async_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    connect_args={"check_same_thread": False}, 
-    echo=True
-)
+engine = engine
 
 # Create a sessionmaker for AsyncSession
 async_session = async_session
 
 # Base class for models
 Base = Base
+
+
 
 # Dependency for getting the DB session
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

@@ -34,10 +34,7 @@ async def create_member(
         )
 
     # Create member and association
-    new_member = Member(
-        full_name=member.full_name,
-        image_file=member.image_file
-    )
+    new_member = Member(full_name=member.full_name )
     
     association = MemberBlockAssociation(
         phone_number=member.phone_number,
