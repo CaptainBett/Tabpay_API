@@ -80,19 +80,41 @@ async def add_to_block(
     current_admin: User = Depends(get_current_admin)
 ):
     # Validate zone and block ownership
-    zone = await db.get(Zone, zone_id)
-    if not zone or zone.block.parent_umbrella_id != current_admin.umbrella.id:
+    result = await db.execute(
+        select(Zone)
+        .join(Block)
+        .where(
+            Zone.id == zone_id,
+            Block.parent_umbrella_id == current_admin.umbrella.id
+        )
+    )
+    zone = result.scalar_one_or_none()
+    
+    if not zone:
         raise HTTPException(status_code=403, detail="Unauthorized zone")
 
-    # Get existing member
-    member = await db.get(Member, member_id, [selectinload(Member.block_associations)])
+    # Get existing member with associations
+    result = await db.execute(
+        select(Member)
+        .options(selectinload(Member.block_associations))
+        .where(Member.id == member_id)
+    )
+    member = result.scalar_one_or_none()
+    
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
+
+    # Check if already in block
+    if any(a.block_id == zone.parent_block_id for a in member.block_associations):
+        raise HTTPException(
+            status_code=400,
+            detail="Member already in this block"
+        )
 
     # Create new association
     new_association = MemberBlockAssociation(
         member_id=member_id,
-        block_id=zone.block.id,
+        block_id=zone.parent_block_id,
         zone_id=zone_id,
         phone_number=phone_number,
         id_number=id_number,
@@ -110,8 +132,17 @@ async def add_to_block(
         )
 
     # Return updated member data
-    await db.refresh(member, ["block_associations"])
-    return MemberResponse.from_member(member)
+    result = await db.execute(
+        select(Member)
+        .options(
+            selectinload(Member.block_associations),
+            selectinload(Member.bank)
+        )
+        .where(Member.id == member_id)
+    )
+    updated_member = result.scalar_one()
+    
+    return MemberResponse.from_member(updated_member)
 
 #TODO Add try except blocks
 
