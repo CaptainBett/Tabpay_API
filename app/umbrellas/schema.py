@@ -22,4 +22,11 @@ class UmbrellaResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class UmbrellaUpdate(BaseModel):
+    name: str | None = None
+    location: str | None = None
+
 UmbrellaResponse.update_forward_refs()
+
+
+

@@ -19,6 +19,7 @@ class UmbrellaResponse(BaseModel):
 
 class BlockCreate(BaseModel):
     name: str
+    
 
 class BlockResponse(BaseModel):
     id: int
@@ -29,5 +30,9 @@ class BlockResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BlockUpdate(BaseModel):
+    name: str | None = None
 
 BlockResponse.update_forward_refs()

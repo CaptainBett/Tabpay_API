@@ -111,30 +111,14 @@ class Member(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column(String, index=True)
+    bank_id = Column(Integer, ForeignKey("banks.id"))
     registered_at = Column(DateTime, default=datetime.now())
     
     # Relationships
     block_associations = relationship("MemberBlockAssociation", back_populates="member")
     contributions = relationship("Contribution", back_populates="member")
+    bank = relationship("Bank",back_populates="members")
     
-    # These properties pull data from the first associated MemberBlockAssociation.
-    @property
-    def phone_number(self) -> str:
-        if self.block_associations:
-            return self.block_associations[0].phone_number
-        return ""  # or None, depending on your design
-
-    @property
-    def id_number(self) -> str:
-        if self.block_associations:
-            return self.block_associations[0].id_number
-        return ""
-    
-    @property
-    def acc_number(self) -> str:
-        if self.block_associations:
-            return self.block_associations[0].acc_number
-        return ""
 
 
 class MemberBlockAssociation(Base):
@@ -237,3 +221,6 @@ class Bank(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, unique=True)
     paybill_no = Column(String, nullable=False, unique=True)
+    
+    # Relationship
+    members = relationship("Member", back_populates="bank")

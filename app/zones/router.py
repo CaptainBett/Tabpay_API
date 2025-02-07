@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from ..database import get_db
 from ..models import User, Zone, Block, UserRole
-from .schema import ZoneCreate, ZoneResponse
+from .schema import ZoneCreate, ZoneResponse, ZoneUpdate
 from ..auth.Oauth2 import get_current_admin, get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 
@@ -114,3 +115,82 @@ async def get_zone_by_id(
             )
 
     return zone
+
+
+
+# Update Zone
+
+@router.put("/{zone_id}", response_model=ZoneResponse)
+async def update_zone(
+    zone_id: int,
+    zone_data: ZoneUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Zone)
+        .options(
+            selectinload(Zone.parent_block).selectinload(Block.parent_umbrella),
+            selectinload(Zone.members)  # Eagerly load members to avoid lazy loading during response serialization
+        )
+        .where(Zone.id == zone_id)
+    )
+    zone = result.scalar_one_or_none()
+    
+    if not zone:
+        raise HTTPException(status_code=404, detail="Zone not found")
+    
+    if current_user.role == UserRole.ADMIN and current_user.id != zone.parent_block.parent_umbrella.admin_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this zone")
+    
+    # Check for name uniqueness within the same block
+    existing = await db.execute(
+        select(Zone)
+        .where(Zone.name == zone_data.name, Zone.parent_block_id == zone.parent_block_id, Zone.id != zone_id)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Zone name already exists in this block")
+    
+    zone.name = zone_data.name
+    
+    try:
+        await db.commit()
+        await db.refresh(zone)
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error")
+    
+    return zone
+
+# Delete Zone
+@router.delete("/{zone_id}")
+async def delete_zone(
+    zone_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Zone)
+        .options(selectinload(Zone.members))
+        .where(Zone.id == zone_id)
+    )
+    zone = result.scalar_one_or_none()
+    
+    if not zone:
+        raise HTTPException(status_code=404, detail="Zone not found")
+    
+    if current_user.role == UserRole.ADMIN and current_user.id != zone.parent_block.parent_umbrella.admin_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this zone")
+    
+    if zone.members:
+        raise HTTPException(status_code=400, detail="Cannot delete zone with existing members. Remove members first.")
+    
+    await db.delete(zone)
+    
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Cannot delete zone due to database constraints")
+    
+    return {"message": "Zone deleted successfully"}

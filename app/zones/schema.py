@@ -30,4 +30,7 @@ class ZoneResponse(BaseModel):
         from_attributes = True
         fields = {"members": {"alias": "member_list"}}
 
+class ZoneUpdate(BaseModel):
+    name: str | None = None
+
 ZoneResponse.update_forward_refs()

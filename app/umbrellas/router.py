@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from ..database import get_db
 from ..models import User, Umbrella, UserRole
-from .schema import UmbrellaCreate, UmbrellaResponse
+from .schema import UmbrellaCreate, UmbrellaResponse, UmbrellaUpdate
 from ..auth.Oauth2 import get_current_admin, get_current_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 
@@ -78,6 +79,7 @@ async def get_all_umbrellas(
     )
     return [result.scalar_one()]
 
+
 @router.get("/{umbrella_id}", response_model=UmbrellaResponse)
 async def get_umbrella_by_id(
     umbrella_id: int,
@@ -108,3 +110,97 @@ async def get_umbrella_by_id(
             )
     
     return umbrella
+
+
+@router.put("/{umbrella_id}", response_model=UmbrellaResponse)
+async def update_umbrella(
+    umbrella_id: int,
+    umbrella_data: UmbrellaUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Get umbrella with blocks
+    result = await db.execute(
+        select(Umbrella)
+        .options(selectinload(Umbrella.blocks))
+        .where(Umbrella.id == umbrella_id)
+    )
+    umbrella = result.scalar_one_or_none()
+    
+    if not umbrella:
+        raise HTTPException(status_code=404, detail="Umbrella not found")
+
+    # Authorization check
+    if current_user.role == UserRole.ADMIN and current_user.id != umbrella.admin_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this umbrella")
+
+    # Update fields
+    update_dict = umbrella_data.dict(exclude_unset=True)
+    for key, value in update_dict.items():
+        if value is not None:
+            setattr(umbrella, key, value)
+
+    # Check name uniqueness if changing name
+    if 'name' in update_dict:
+        existing = await db.execute(
+            select(Umbrella)
+            .where(Umbrella.name == update_dict['name'], Umbrella.id != umbrella_id)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Umbrella name already exists")
+
+    try:
+        await db.commit()
+        # Re-query to ensure all relationships are loaded
+        result = await db.execute(
+            select(Umbrella)
+            .options(selectinload(Umbrella.blocks))
+            .where(Umbrella.id == umbrella_id)
+        )
+        updated_umbrella = result.scalar_one()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Database integrity error")
+
+    return updated_umbrella
+
+@router.delete("/{umbrella_id}")
+async def delete_umbrella(
+    umbrella_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Get umbrella with blocks
+    result = await db.execute(
+        select(Umbrella)
+        .options(selectinload(Umbrella.blocks))
+        .where(Umbrella.id == umbrella_id)
+    )
+    umbrella = result.scalar_one_or_none()
+    
+    if not umbrella:
+        raise HTTPException(status_code=404, detail="Umbrella not found")
+
+    # Authorization check
+    if current_user.role == UserRole.ADMIN and current_user.id != umbrella.admin_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this umbrella")
+
+    # Prevent deletion if umbrella has blocks
+    if len(umbrella.blocks) > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete umbrella with existing blocks. Delete blocks first."
+        )
+
+    await db.delete(umbrella)
+    
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot delete umbrella due to database constraints"
+        )
+
+    return {"message": "Umbrella deleted successfully"}
